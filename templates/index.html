@@ -34,7 +34,7 @@
         .section-header.only-left { background: #d4edda; }
         .section-header.only-right { background: #cce5ff; }
         .section-header.identical { background: #f8f9fa; color: #6c757d; }
-        .section-content { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-top: none; }
+        .section-content { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-top: none; display: block; }
         .setting-row { display: grid; grid-template-columns: 30px 1fr 200px 200px; padding: 8px 15px; border-bottom: 1px solid #eee; align-items: center; font-size: 13px; }
         .setting-row:hover { background: #f8f9fa; }
         .setting-row.hidden { display: none; }
@@ -137,6 +137,7 @@
                 document.getElementById('results').style.display = 'block';
                 document.getElementById('summary').textContent = comparisonData.summary;
                 renderResults();
+                console.log('Comparison data:', comparisonData); // Debug log
             } catch (e) {
                 alert('Comparison failed: ' + e);
             }
@@ -156,6 +157,7 @@
             }
             if (comparisonData.identical.length > 0) {
                 html += renderSection('identical', 'Identical Settings', comparisonData.identical, false);
+                console.log('Rendering identical section with', comparisonData.identical.length, 'items'); // Debug log
             }
             
             document.getElementById('comparison-results').innerHTML = html;
