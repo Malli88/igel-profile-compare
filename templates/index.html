@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGEL Profile Compare & Migrate</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .panel { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .panel h2 { color: #555; margin-bottom: 15px; font-size: 16px; }
+        .upload-area { border: 2px dashed #ccc; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .upload-area:hover { border-color: #007bff; background: #f8f9ff; }
+        .upload-area.loaded { border-color: #28a745; background: #f0fff4; }
+        .upload-area input { display: none; }
+        .profile-info { margin-top: 15px; padding: 10px; background: #e9ecef; border-radius: 4px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .actions { text-align: center; margin-bottom: 20px; }
+        .filter-box { margin-bottom: 15px; }
+        .filter-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .results { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .summary { padding: 15px; background: #e9ecef; border-radius: 4px; margin-bottom: 15px; font-weight: 500; }
+        .section { margin-bottom: 20px; }
+        .section-header { padding: 10px 15px; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-header.different { background: #fff3cd; }
+        .section-header.only-left { background: #d4edda; }
+        .section-header.only-right { background: #cce5ff; }
+        .section-content { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-top: none; }
+        .setting-row { display: grid; grid-template-columns: 30px 1fr 200px 200px; padding: 8px 15px; border-bottom: 1px solid #eee; align-items: center; font-size: 13px; }
+        .setting-row:hover { background: #f8f9fa; }
+        .setting-row.hidden { display: none; }
+        .setting-key { word-break: break-all; }
+        .setting-value { color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .migrate-actions { text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        .select-actions { margin-bottom: 10px; }
+        .select-actions button { margin: 0 5px; padding: 5px 10px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 IGEL Profile Compare & Migrate</h1>
+        
+        <div class="panels">
+            <div class="panel">
+                <h2>📁 Left Profile (Source)</h2>
+                <div class="upload-area" id="left-upload" onclick="document.getElementById('left-file').click()">
+                    <input type="file" id="left-file" accept=".ipm" onchange="uploadFile('left', this)">
+                    <p>Click to upload .ipm file</p>
+                </div>
+                <div class="profile-info" id="left-info" style="display:none"></div>
+            </div>
+            <div class="panel">
+                <h2>📁 Right Profile (Target)</h2>
+                <div class="upload-area" id="right-upload" onclick="document.getElementById('right-file').click()">
+                    <input type="file" id="right-file" accept=".ipm" onchange="uploadFile('right', this)">
+                    <p>Click to upload .ipm file</p>
+                </div>
+                <div class="profile-info" id="right-info" style="display:none"></div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" id="compare-btn" onclick="compareProfiles()" disabled>Compare Profiles</button>
+        </div>
+        
+        <div class="results" id="results" style="display:none">
+            <div class="summary" id="summary"></div>
+            <div class="filter-box">
+                <input type="text" id="filter" placeholder="Filter settings..." oninput="filterSettings()">
+            </div>
+            <div id="comparison-results"></div>
+            <div class="migrate-actions">
+                <div class="select-actions">
+                    <button class="btn" onclick="selectAll()">Select All</button>
+                    <button class="btn" onclick="selectNone()">Select None</button>
+                </div>
+                <button class="btn btn-success" onclick="migrateSettings()">⬇️ Migrate Selected to Target & Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let leftLoaded = false, rightLoaded = false;
+        let comparisonData = null;
+        
+        async function uploadFile(side, input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const resp = await fetch(`/upload/${side}`, { method: 'POST', body: formData });
+                const data = await resp.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                document.getElementById(`${side}-upload`).classList.add('loaded');
+                document.getElementById(`${side}-info`).style.display = 'block';
+                document.getElementById(`${side}-info`).innerHTML = `
+                    <strong>${data.name}</strong><br>
+                    <small>${data.filename} - ${data.settings_count} settings</small>
+                `;
+                
+                if (side === 'left') leftLoaded = true;
+                else rightLoaded = true;
+                
+                document.getElementById('compare-btn').disabled = !(leftLoaded && rightLoaded);
+            } catch (e) {
+                alert('Upload failed: ' + e);
+            }
+        }
+        
+        async function compareProfiles() {
+            try {
+                const resp = await fetch('/compare', { method: 'POST' });
+                comparisonData = await resp.json();
+                
+                if (comparisonData.error) {
+                    alert('Error: ' + comparisonData.error);
+                    return;
+                }
+                
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('summary').textContent = comparisonData.summary;
+                renderResults();
+            } catch (e) {
+                alert('Comparison failed: ' + e);
+            }
+        }
+        
+        function renderResults() {
+            let html = '';
+            
+            if (comparisonData.different.length > 0) {
+                html += renderSection('different', 'Different Values', comparisonData.different, true);
+            }
+            if (comparisonData.only_left.length > 0) {
+                html += renderSection('only-left', `Only in ${comparisonData.left_name}`, comparisonData.only_left, true);
+            }
+            if (comparisonData.only_right.length > 0) {
+                html += renderSection('only-right', `Only in ${comparisonData.right_name}`, comparisonData.only_right, false);
+            }
+            
+            document.getElementById('comparison-results').innerHTML = html;
+        }
+        
+        function renderSection(type, title, items, canMigrate) {
+            let rows = items.map((item, i) => {
+                const checkbox = canMigrate ? `<input type="checkbox" class="migrate-cb" data-key="${item.key}">` : '';
+                const leftVal = item.left !== undefined ? item.left : (item.value || '-');
+                const rightVal = item.right !== undefined ? item.right : '-';
+                return `<div class="setting-row" data-key="${item.key.toLowerCase()}">
+                    <div>${checkbox}</div>
+                    <div class="setting-key">${item.key}</div>
+                    <div class="setting-value" title="${leftVal}">${String(leftVal).substring(0,50)}</div>
+                    <div class="setting-value" title="${rightVal}">${String(rightVal).substring(0,50)}</div>
+                </div>`;
+            }).join('');
+            
+            return `<div class="section">
+                <div class="section-header ${type}" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                    <span>${title}</span><span>${items.length} items</span>
+                </div>
+                <div class="section-content">${rows}</div>
+            </div>`;
+        }
+        
+        function filterSettings() {
+            const filter = document.getElementById('filter').value.toLowerCase();
+            document.querySelectorAll('.setting-row').forEach(row => {
+                const key = row.dataset.key;
+                row.classList.toggle('hidden', filter && !key.includes(filter));
+            });
+        }
+        
+        function selectAll() {
+            document.querySelectorAll('.migrate-cb').forEach(cb => cb.checked = true);
+        }
+        
+        function selectNone() {
+            document.querySelectorAll('.migrate-cb').forEach(cb => cb.checked = false);
+        }
+        
+        async function migrateSettings() {
+            const keys = Array.from(document.querySelectorAll('.migrate-cb:checked')).map(cb => cb.dataset.key);
+            if (keys.length === 0) {
+                alert('Please select settings to migrate');
+                return;
+            }
+            
+            try {
+                const resp = await fetch('/migrate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keys })
+                });
+                
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    alert('Error: ' + err.error);
+                    return;
+                }
+                
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${comparisonData.right_name}_migrated.ipm`;
+                a.click();
+            } catch (e) {
+                alert('Migration failed: ' + e);
+            }
+        }
+    </script>
+</body>
+</html>

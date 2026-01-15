@@ -1,58 +1,68 @@
-# IGEL Profile Compare & Migrate Tool
+# IGEL Profile Compare & Migrate
 
-A Windows desktop application for comparing and migrating settings between IGEL IPM profile exports.
+A tool to compare and migrate settings between IGEL IPM profile files.
 
 ## Features
 
-- **Load & Compare**: Open two `.ipm` files side-by-side
-- **Visual Diff**: See differences highlighted by category:
-  - Different values (yellow)
-  - Only in source profile (green)
-  - Only in target profile (blue)
-- **Filter**: Search settings by name
-- **Selective Migration**: Check settings to migrate from source to target
-- **Export**: Save new IPM file with migrated settings
+- 📁 Load and parse IGEL .ipm profile files
+- 🔍 Compare two profiles side-by-side
+- 🔄 Migrate selected settings from source to target
+- 🌐 **Web GUI** - works on any platform with a browser
+- 🖥️ Desktop GUI (PyQt6) - optional
 
-## Installation
+## Quick Start (Web GUI - Recommended)
 
-### Option 1: Run from Source
 ```bash
+git clone https://github.com/Malli88/igel-profile-compare.git
+cd igel-profile-compare
 pip install -r requirements.txt
-python run.py
+python run_web.py
 ```
 
-### Option 2: Build Windows Executable
-```bash
-# On Windows:
-build_windows.bat
-
-# Or manually:
-pip install -r requirements.txt
-pyinstaller --onefile --windowed --name "IGEL-Profile-Compare" src/main.py
-```
-
-The executable will be in `dist/IGEL-Profile-Compare.exe`
+Then open http://localhost:5000 in your browser.
 
 ## Usage
 
-1. Click **"Load IPM File..."** on both panels to load source and target profiles
-2. Click **"Compare Profiles"** to see differences
-3. Use the filter box to search for specific settings
-4. Check the settings you want to migrate from source to target
-5. Click **"Migrate Selected to Target →"** and save the new IPM file
+1. **Upload** two .ipm files (left = source, right = target)
+2. **Compare** to see differences
+3. **Select** settings to migrate (checkbox)
+4. **Download** the migrated profile
 
-## Requirements
+## Screenshots
 
-- Python 3.10+
-- PyQt6
-- See `requirements.txt` for full list
+### Web Interface
+- Upload profiles on left and right panels
+- View differences with color coding
+- Filter settings by name
+- Select and migrate with one click
 
-## IPM File Format
+## Alternative: Desktop GUI
 
-This tool works with IGEL UMS profile exports (`.ipm` files), which are ZIP archives containing:
-- `PROFILES/*.json` - Profile configuration with settings
-- `APPS/` - Application metadata
+```bash
+pip install -r requirements.txt
+python src/main.py
+```
+
+## Building Windows Executable
+
+```batch
+build_windows.bat
+```
+
+## Project Structure
+
+```
+src/
+├── core/           # Core logic
+│   ├── ipm_handler.py   # IPM file parsing
+│   ├── comparator.py    # Profile comparison
+│   └── migrator.py      # Settings migration
+├── gui/            # Desktop GUI (PyQt6)
+├── web/            # Web GUI (Flask)
+└── main.py         # Desktop entry point
+run_web.py          # Web entry point
+```
 
 ## License
 
-MIT License
+MIT
