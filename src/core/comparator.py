@@ -23,6 +23,15 @@ class ComparisonResult:
         return f"Only in {self.left_name}: {len(self.only_left)}, Only in {self.right_name}: {len(self.only_right)}, Different: {len(self.different)}, Identical: {len(self.identical)}"
 
 
+def _normalize_value(val: Any) -> Any:
+    """Normalize values for comparison."""
+    if isinstance(val, str):
+        v = val.lower()
+        if v in ('true', 'false'):
+            return v == 'true'
+    return val
+
+
 def compare_profiles(left: IPMProfile, right: IPMProfile) -> ComparisonResult:
     """Compare two IPM profiles and return differences."""
     left_flat = left.get_flat_settings()
@@ -33,18 +42,15 @@ def compare_profiles(left: IPMProfile, right: IPMProfile) -> ComparisonResult:
     
     result = ComparisonResult(left_name=left.name, right_name=right.name)
     
-    # Keys only in left
     for key in left_keys - right_keys:
         result.only_left[key] = left_flat[key]
     
-    # Keys only in right
     for key in right_keys - left_keys:
         result.only_right[key] = right_flat[key]
     
-    # Common keys - check values
     for key in left_keys & right_keys:
-        lv = left_flat[key]["value"]
-        rv = right_flat[key]["value"]
+        lv = _normalize_value(left_flat[key]["value"])
+        rv = _normalize_value(right_flat[key]["value"])
         if lv != rv:
             result.different[key] = (left_flat[key], right_flat[key])
         else:
