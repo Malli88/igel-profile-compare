@@ -92,6 +92,14 @@
         let leftLoaded = false, rightLoaded = false;
         let comparisonData = null;
         
+        function displayValue(val) {
+            if (val === null || val === undefined) return '-';
+            if (typeof val === 'object') {
+                return JSON.stringify(val).substring(0, 50);
+            }
+            return String(val).substring(0, 50);
+        }
+        
         async function uploadFile(side, input) {
             const file = input.files[0];
             if (!file) return;
@@ -137,7 +145,6 @@
                 document.getElementById('results').style.display = 'block';
                 document.getElementById('summary').textContent = comparisonData.summary;
                 renderResults();
-                console.log('Comparison data:', comparisonData); // Debug log
             } catch (e) {
                 alert('Comparison failed: ' + e);
             }
@@ -157,7 +164,6 @@
             }
             if (comparisonData.identical.length > 0) {
                 html += renderSection('identical', 'Identical Settings', comparisonData.identical, false);
-                console.log('Rendering identical section with', comparisonData.identical.length, 'items'); // Debug log
             }
             
             document.getElementById('comparison-results').innerHTML = html;
@@ -173,15 +179,15 @@
                     leftVal = item.value;
                     rightVal = item.value;
                 } else {
-                    leftVal = item.left !== undefined ? item.left : (item.value || '-');
-                    rightVal = item.right !== undefined ? item.right : '-';
+                    leftVal = item.left !== undefined ? item.left : (item.value || null);
+                    rightVal = item.right !== undefined ? item.right : null;
                 }
                 
                 return `<div class="setting-row" data-key="${item.key.toLowerCase()}">
                     <div>${checkbox}</div>
                     <div class="setting-key">${item.key}</div>
-                    <div class="setting-value" title="${leftVal}">${String(leftVal).substring(0,50)}</div>
-                    <div class="setting-value" title="${rightVal}">${String(rightVal).substring(0,50)}</div>
+                    <div class="setting-value" title="${displayValue(leftVal)}">${displayValue(leftVal)}</div>
+                    <div class="setting-value" title="${displayValue(rightVal)}">${displayValue(rightVal)}</div>
                 </div>`;
             }).join('');
             
