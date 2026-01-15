@@ -15,3 +15,4 @@ pyarmor>=8.4.0
 
 # Utilities
 natsort>=8.4.0  # Natural sorting for keys
+pyinstaller>=6.0
