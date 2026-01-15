@@ -1,15 +1,6 @@
-"""Core modules for IGEL Profile Compare & Migration Tool."""
+"""Core modules for IPM handling."""
+from .ipm_handler import IPMProfile, ProfileMeta, ParameterValue, InstanceParameter, load_ipm
+from .comparator import compare_profiles, ComparisonResult
+from .migrator import migrate_settings
 
-from src.core.ipm_handler import IPMHandler, IPMProfile, IPMValidationError, IPMFileInfo
-from src.core.comparator import ProfileComparator, ComparisonResult, DiffEntry, DiffType
-from src.core.migrator import (
-    ProfileMigrator, MigrationDirection, MigrationMode,
-    MigrationPlan, MigrationResult, MigrationAction
-)
-
-__all__ = [
-    "IPMHandler", "IPMProfile", "IPMValidationError", "IPMFileInfo",
-    "ProfileComparator", "ComparisonResult", "DiffEntry", "DiffType",
-    "ProfileMigrator", "MigrationDirection", "MigrationMode",
-    "MigrationPlan", "MigrationResult", "MigrationAction"
-]
+__all__ = ["IPMProfile", "ProfileMeta", "ParameterValue", "InstanceParameter", "load_ipm", "compare_profiles", "ComparisonResult", "migrate_settings"]
