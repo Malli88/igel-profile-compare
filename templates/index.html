@@ -33,6 +33,7 @@
         .section-header.different { background: #fff3cd; }
         .section-header.only-left { background: #d4edda; }
         .section-header.only-right { background: #cce5ff; }
+        .section-header.identical { background: #f8f9fa; color: #6c757d; }
         .section-content { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-top: none; }
         .setting-row { display: grid; grid-template-columns: 30px 1fr 200px 200px; padding: 8px 15px; border-bottom: 1px solid #eee; align-items: center; font-size: 13px; }
         .setting-row:hover { background: #f8f9fa; }
@@ -153,6 +154,9 @@
             if (comparisonData.only_right.length > 0) {
                 html += renderSection('only-right', `Only in ${comparisonData.right_name}`, comparisonData.only_right, false);
             }
+            if (comparisonData.identical.length > 0) {
+                html += renderSection('identical', 'Identical Settings', comparisonData.identical, false);
+            }
             
             document.getElementById('comparison-results').innerHTML = html;
         }
@@ -160,8 +164,17 @@
         function renderSection(type, title, items, canMigrate) {
             let rows = items.map((item, i) => {
                 const checkbox = canMigrate ? `<input type="checkbox" class="migrate-cb" data-key="${item.key}">` : '';
-                const leftVal = item.left !== undefined ? item.left : (item.value || '-');
-                const rightVal = item.right !== undefined ? item.right : '-';
+                let leftVal, rightVal;
+                
+                if (type === 'identical') {
+                    // For identical, show value in both columns
+                    leftVal = item.value;
+                    rightVal = item.value;
+                } else {
+                    leftVal = item.left !== undefined ? item.left : (item.value || '-');
+                    rightVal = item.right !== undefined ? item.right : '-';
+                }
+                
                 return `<div class="setting-row" data-key="${item.key.toLowerCase()}">
                     <div>${checkbox}</div>
                     <div class="setting-key">${item.key}</div>
@@ -198,7 +211,6 @@
             const keys = Array.from(document.querySelectorAll('.migrate-cb:checked')).map(cb => cb.dataset.key);
             if (keys.length === 0) {
                 alert('Please select settings to migrate');
-                return;
             }
             
             try {
