@@ -66,3 +66,41 @@ run_web.py          # Web entry point
 ## License
 
 MIT
+
+## Building Protected Executable (Windows)
+
+### Option 1: Nuitka (Recommended - Best Protection)
+
+Compiles Python to C code - very difficult to reverse engineer.
+
+```batch
+build_protected.bat
+```
+
+**Protection level:** ⭐⭐⭐⭐⭐
+- Source code compiled to C, then to machine code
+- No Python bytecode to decompile
+- Control flow obfuscation
+
+### Option 2: PyArmor + PyInstaller (Faster Build)
+
+Obfuscates bytecode - moderate protection.
+
+```batch
+build_obfuscated.bat
+```
+
+**Protection level:** ⭐⭐⭐
+- Bytecode encryption
+- Code obfuscation
+- Faster build time
+
+### Option 3: Standard PyInstaller (No Protection)
+
+```batch
+build_windows.bat
+```
+
+**Protection level:** ⭐
+- Easy to decompile
+- Use only for internal distribution
