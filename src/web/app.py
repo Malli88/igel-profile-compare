@@ -67,6 +67,7 @@ def compare():
             'different': [{"key": k, "left": v[0]["value"], "right": v[1]["value"]} for k, v in sorted(result.different.items())],
             'only_left': [{"key": k, "value": v["value"]} for k, v in sorted(result.only_left.items())],
             'only_right': [{"key": k, "value": v["value"]} for k, v in sorted(result.only_right.items())],
+            'identical': [{"key": k, "value": v["value"]} for k, v in sorted(result.identical.items())],
             'identical_count': len(result.identical)
         }
         return jsonify(data)
